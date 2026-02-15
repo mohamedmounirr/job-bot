@@ -13,6 +13,9 @@ START_TIME = datetime.utcnow()
 
 sent_jobs = set()
 
+def fetch_arbeitnow():
+    url = "https://www.arbeitnow.com/api/job-board-api"
+    return requests.get(url).json()["data"]
 
 def send_telegram(msg):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
@@ -27,13 +30,15 @@ def fetch_jobs():
 
 while True:
     print("Checking jobs...")
-    jobs = fetch_jobs()
+    jobs = fetch_jobs() + fetch_arbeitnow()
 
     for job in jobs:
-        title = job["title"].lower()
+        title = (job.get("title") or job.get("position","")).lower()
         location = job.get("candidate_required_location", "").lower()
         pub_date = job.get("publication_date")
         job_id = job["id"]
+        link = job.get("url") or job.get("apply_url")
+        
         print(job["title"])
         print(location)
         print(pub_date)
@@ -46,13 +51,13 @@ while True:
             and job_time > datetime.utcnow() - timedelta(hours=HOURS)
             and job_id not in sent_jobs
         ):
+                
                 message = f"""
 💼 {job['title']}
 🏢 {job['company_name']}
 🌍 {job['candidate_required_location']}
-🔗 {job['url']}
+🔗 {{link}}
 """
-
                 send_telegram(message)
                 sent_jobs.add(job_id)
                 print("Sent:", job["title"])
