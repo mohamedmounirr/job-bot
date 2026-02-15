@@ -52,12 +52,12 @@ while True:
             and job_time > since
             and job_id not in sent_jobs
         ):
-                
+                link = job.get("url") or job.get("apply_url") or job.get("job_url") or "No link"
                 message = f"""
 💼 {job['title']}
 🏢 {job['company_name']}
 🌍 {location}
-🔗 {{link}}
+🔗 {link}
 """
                 send_telegram(message)
                 sent_jobs.add(job_id)
